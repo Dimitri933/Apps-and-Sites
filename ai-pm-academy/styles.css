@@ -534,6 +534,23 @@ ul {
   flex-shrink: 0;
 }
 
+.modal.text-only .modal-video {
+  display: none;
+}
+
+.modal.text-only .modal-body {
+  padding-top: 56px;
+}
+
+.modal.text-only .modal-body p {
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.icon-btn.text-btn.active {
+  background: var(--color-primary);
+}
+
 .play-btn {
   width: 64px;
   height: 64px;

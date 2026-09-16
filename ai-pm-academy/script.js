@@ -110,6 +110,7 @@ const modalNext = document.getElementById("modalNext");
 const modalClose = document.getElementById("modalClose");
 const modalSize = document.getElementById("modalSize");
 const modalFullscreen = document.getElementById("modalFullscreen");
+const modalTextOnly = document.getElementById("modalTextOnly");
 const playBtn = document.getElementById("playBtn");
 const modalCaptions = document.getElementById("modalCaptions");
 const noAudioWarning = document.getElementById("noAudioWarning");
@@ -144,29 +145,47 @@ document.addEventListener("fullscreenchange", () => {
   modalBox.classList.toggle("fullscreen-active", document.fullscreenElement === modalBox);
 });
 
+modalTextOnly.addEventListener("click", () => {
+  const isTextOnly = modalBox.classList.toggle("text-only");
+  modalTextOnly.classList.toggle("active", isTextOnly);
+  if (isTextOnly) stopNarration();
+});
+
+let sortedVoices = [];
+const brokenVoiceURIs = new Set();
+
 function populateVoices() {
   if (!speechSupported) return;
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return;
 
-  const rank = (v) =>
-    /natural|neural|enhanced|premium|online/i.test(v.name) ? 0 : v.lang.startsWith("en") ? 1 : 2;
-  const sorted = [...voices].sort((a, b) => rank(a) - rank(b));
+  // Local (on-device) voices work reliably offline; remote/network voices
+  // often silently fail depending on the browser and embedding context, so
+  // they're ranked after local ones even if their names sound "nicer".
+  const rank = (v) => {
+    if (!v.localService) return 2;
+    return /natural|neural|enhanced|premium/i.test(v.name) ? 0 : v.lang.startsWith("en") ? 1 : 1.5;
+  };
+  sortedVoices = [...voices].sort((a, b) => rank(a) - rank(b));
 
   voiceSelect.innerHTML = "";
-  sorted.forEach((v) => {
+  sortedVoices.forEach((v) => {
     const opt = document.createElement("option");
     opt.value = v.voiceURI;
-    opt.textContent = `${v.name} (${v.lang})`;
+    const tag = v.localService ? "" : " ⚠ needs network";
+    opt.textContent = `${v.name} (${v.lang})${tag}`;
     voiceSelect.appendChild(opt);
   });
 
-  if (!selectedVoiceURI) selectedVoiceURI = sorted[0].voiceURI;
+  if (!selectedVoiceURI || !sortedVoices.some((v) => v.voiceURI === selectedVoiceURI)) {
+    selectedVoiceURI = sortedVoices[0].voiceURI;
+  }
   voiceSelect.value = selectedVoiceURI;
 }
 
 voiceSelect.addEventListener("change", () => {
   selectedVoiceURI = voiceSelect.value;
+  brokenVoiceURIs.delete(selectedVoiceURI);
 });
 
 if (speechSupported) {
@@ -175,35 +194,49 @@ if (speechSupported) {
 }
 
 function stopNarration() {
+  clearTimeout(startTimer);
   if (speechSupported) window.speechSynthesis.cancel();
   modalVideo.classList.remove("playing");
   playBtn.textContent = "▶";
   modalCaptions.textContent = "";
 }
 
-function pickVoice() {
+function candidateVoices() {
   const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  return (
-    voices.find((v) => v.voiceURI === selectedVoiceURI) ||
-    voices.find((v) => v.lang && v.lang.startsWith("en")) ||
-    voices[0]
+  if (!voices.length) return [null];
+  const preferred = voices.find((v) => v.voiceURI === selectedVoiceURI);
+  const fallbacks = sortedVoices.length ? sortedVoices : voices;
+  const ordered = [preferred, ...fallbacks].filter(
+    (v, i, arr) => v && !brokenVoiceURIs.has(v.voiceURI) && arr.findIndex((x) => x && x.voiceURI === v.voiceURI) === i
   );
+  ordered.push(null); // last resort: browser default voice
+  return ordered;
 }
 
-function playNarration(lesson) {
-  if (!speechSupported) return;
-  window.speechSynthesis.cancel();
+let startTimer = null;
 
-  const text = `${lesson.title}. ${lesson.desc}`;
-  narrationWords = text.split(/\s+/);
+function speakAttempt(text, voiceQueue, queueIndex) {
+  if (queueIndex >= voiceQueue.length) {
+    modalCaptions.textContent = "Audio isn't available on this device/browser — try Text Only below.";
+    modalVideo.classList.remove("playing");
+    playBtn.textContent = "▶";
+    return;
+  }
+
+  const voice = voiceQueue[queueIndex];
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.98;
   utterance.pitch = 1;
-  const voice = pickVoice();
-  if (voice) utterance.voice = voice;
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+  }
+
+  let started = false;
 
   utterance.onstart = () => {
+    started = true;
+    clearTimeout(startTimer);
     modalVideo.classList.add("playing");
     playBtn.textContent = "⏸";
   };
@@ -217,18 +250,38 @@ function playNarration(lesson) {
   };
 
   utterance.onend = () => {
+    clearTimeout(startTimer);
     modalVideo.classList.remove("playing");
     playBtn.textContent = "▶";
     modalCaptions.textContent = "";
   };
 
   utterance.onerror = () => {
-    modalVideo.classList.remove("playing");
-    playBtn.textContent = "▶";
+    clearTimeout(startTimer);
+    if (voice) brokenVoiceURIs.add(voice.voiceURI);
+    speakAttempt(text, voiceQueue, queueIndex + 1);
   };
 
   currentUtterance = utterance;
   window.speechSynthesis.speak(utterance);
+
+  clearTimeout(startTimer);
+  startTimer = setTimeout(() => {
+    if (!started) {
+      window.speechSynthesis.cancel();
+      if (voice) brokenVoiceURIs.add(voice.voiceURI);
+      speakAttempt(text, voiceQueue, queueIndex + 1);
+    }
+  }, 1500);
+}
+
+function playNarration(lesson) {
+  if (!speechSupported) return;
+  window.speechSynthesis.cancel();
+
+  const text = `${lesson.title}. ${lesson.desc}`;
+  narrationWords = text.split(/\s+/);
+  speakAttempt(text, candidateVoices(), 0);
 }
 
 function openLesson(index) {
