@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Name — Portfolio</title>
+<meta name="description" content="Personal portfolio showcasing projects, skills, and experience.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="#home" class="logo">Your Name</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="hero container">
+    <div class="hero-content">
+      <p class="eyebrow">Hi, I'm</p>
+      <h1>Your Name</h1>
+      <h2>Software Developer &amp; Problem Solver</h2>
+      <p class="hero-text">
+        I build clean, reliable software and enjoy turning ideas into working products.
+        Replace this text with a short intro about yourself.
+      </p>
+      <div class="hero-actions">
+        <a href="#projects" class="btn btn-primary">View My Work</a>
+        <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section container">
+    <h2 class="section-title">About Me</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          I'm a developer with a passion for building thoughtful, well-crafted software.
+          I enjoy working across the stack, learning new technologies, and collaborating
+          with teams to solve real problems.
+        </p>
+        <p>
+          Replace this section with your own background — where you've worked, what
+          you're currently focused on, and what drives you.
+        </p>
+      </div>
+      <div class="about-facts">
+        <ul>
+          <li><strong>Location:</strong> Your City, Country</li>
+          <li><strong>Focus:</strong> Web Development</li>
+          <li><strong>Currently:</strong> Open to opportunities</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects" class="section container">
+    <h2 class="section-title">Projects</h2>
+    <div class="projects-grid">
+      <article class="card">
+        <h3>Project One</h3>
+        <p>A short description of this project — what it does and what problem it solves.</p>
+        <div class="card-tags">
+          <span>HTML</span><span>CSS</span><span>JavaScript</span>
+        </div>
+        <a href="#" class="card-link">View Project →</a>
+      </article>
+      <article class="card">
+        <h3>Project Two</h3>
+        <p>A short description of this project — what it does and what problem it solves.</p>
+        <div class="card-tags">
+          <span>Python</span><span>API</span>
+        </div>
+        <a href="#" class="card-link">View Project →</a>
+      </article>
+      <article class="card">
+        <h3>Project Three</h3>
+        <p>A short description of this project — what it does and what problem it solves.</p>
+        <div class="card-tags">
+          <span>React</span><span>Node.js</span>
+        </div>
+        <a href="#" class="card-link">View Project →</a>
+      </article>
+    </div>
+  </section>
+
+  <section id="skills" class="section container">
+    <h2 class="section-title">Skills</h2>
+    <div class="skills-grid">
+      <span class="skill">HTML &amp; CSS</span>
+      <span class="skill">JavaScript</span>
+      <span class="skill">Python</span>
+      <span class="skill">Git</span>
+      <span class="skill">SQL</span>
+      <span class="skill">REST APIs</span>
+    </div>
+  </section>
+
+  <section id="contact" class="section container">
+    <h2 class="section-title">Get In Touch</h2>
+    <p class="contact-text">
+      Interested in working together or just want to say hello? Feel free to reach out.
+    </p>
+    <div class="contact-links">
+      <a href="mailto:you@example.com" class="btn btn-primary">Email Me</a>
+      <a href="#" class="btn btn-secondary">LinkedIn</a>
+      <a href="#" class="btn btn-secondary">GitHub</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>&copy; <span id="year"></span> Your Name. All rights reserved.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
