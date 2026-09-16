@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Technicals — RAG, RAGAS &amp; LLM Evals for Senior AI PMs</title>
+<meta name="description" content="Short, clear video lessons on RAG, RAGAS, LLM evaluation and system design for senior AI Product Managers, with tests and mock technical interviews.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="#home" class="logo">PM<span>Technicals</span></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#curriculum">Curriculum</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#interviews">Mock Interviews</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a href="#pricing" class="btn btn-primary nav-cta">Start Learning</a>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="hero container">
+    <p class="eyebrow">For Senior AI Product Managers</p>
+    <h1>Go from "I get the idea" to<br>"I can defend the architecture."</h1>
+    <p class="hero-text">
+      Short, sharp video lessons on RAG, RAGAS, LLM evaluation, and model behavior —
+      built for PMs who need to speak fluently with engineering, not become engineers.
+      Every module ends with a test. Every track ends with a mock technical interview.
+    </p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn btn-primary">Start Learning Free</a>
+      <a href="#curriculum" class="btn btn-secondary">See the Curriculum</a>
+    </div>
+    <div class="hero-stats">
+      <div><strong>6</strong><span>Core Modules</span></div>
+      <div><strong>4–8 min</strong><span>Avg. Lesson Length</span></div>
+      <div><strong>30+</strong><span>Interview Questions</span></div>
+    </div>
+  </section>
+
+  <section class="logos container">
+    <p>Built for PMs who need to review architecture docs, challenge eval results, and run technical interviews with confidence.</p>
+  </section>
+
+  <section id="how-it-works" class="section container">
+    <h2 class="section-title">How the program works</h2>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Watch a short lesson</h3>
+        <p>4–8 minute videos, no fluff. Each one answers a single question a PM would actually be asked in a review.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Take the module test</h3>
+        <p>Scenario-based questions that check whether you can apply the concept, not just recall a definition.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Run a mock interview</h3>
+        <p>Timed, realistic technical interview simulations with feedback on where your answers would fall apart.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="curriculum" class="section container">
+    <h2 class="section-title">Curriculum</h2>
+    <p class="section-subtitle">Six modules covering the technical foundation every AI PM is expected to know.</p>
+
+    <div class="curriculum-grid">
+      <article class="module-card">
+        <div class="module-tag">Module 1</div>
+        <h3>LLM Foundations</h3>
+        <p>Tokens, context windows, embeddings, temperature, fine-tuning vs. prompting — the vocabulary you need before every other module.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> How LLMs actually generate text <em>6 min</em></li>
+          <li><span class="dot"></span> Context windows &amp; why they break products <em>5 min</em></li>
+          <li><span class="dot"></span> Fine-tuning vs. prompting vs. RAG <em>7 min</em></li>
+        </ul>
+        <a href="#pricing" class="card-link">Start Module →</a>
+      </article>
+
+      <article class="module-card">
+        <div class="module-tag">Module 2</div>
+        <h3>Retrieval-Augmented Generation (RAG)</h3>
+        <p>Chunking strategies, embeddings, vector databases, retrieval quality — and where RAG pipelines quietly fail.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> RAG architecture end to end <em>8 min</em></li>
+          <li><span class="dot"></span> Chunking &amp; embedding strategy <em>6 min</em></li>
+          <li><span class="dot"></span> Why retrieval quality caps output quality <em>5 min</em></li>
+        </ul>
+        <a href="#pricing" class="card-link">Start Module →</a>
+      </article>
+
+      <article class="module-card">
+        <div class="module-tag">Module 3</div>
+        <h3>Evaluating LLM Systems</h3>
+        <p>Golden datasets, human eval vs. automated eval, offline vs. online evaluation, and what to actually measure.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> Building a golden test set <em>7 min</em></li>
+          <li><span class="dot"></span> Offline vs. online evals <em>5 min</em></li>
+          <li><span class="dot"></span> Reading an eval report like an engineer <em>6 min</em></li>
+        </ul>
+        <a href="#pricing" class="card-link">Start Module →</a>
+      </article>
+
+      <article class="module-card">
+        <div class="module-tag">Module 4</div>
+        <h3>RAGAS &amp; RAG-specific Metrics</h3>
+        <p>Faithfulness, answer relevance, context precision and recall — what RAGAS scores mean and when to trust them.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> Faithfulness &amp; hallucination detection <em>6 min</em></li>
+          <li><span class="dot"></span> Context precision vs. context recall <em>6 min</em></li>
+          <li><span class="dot"></span> When a high RAGAS score still means a bad product <em>7 min</em></li>
+        </ul>
+        <a href="#pricing" class="card-link">Start Module →</a>
+      </article>
+
+      <article class="module-card">
+        <div class="module-tag">Module 5</div>
+        <h3>Prompting &amp; System Design for PMs</h3>
+        <p>System prompts, guardrails, structured outputs, and how to scope a technical spec engineering will trust.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> Writing a spec engineers won't rewrite <em>6 min</em></li>
+          <li><span class="dot"></span> Guardrails &amp; structured output <em>5 min</em></li>
+          <li><span class="dot"></span> Trade-offs: latency, cost, quality <em>6 min</em></li>
+        </ul>
+        <a href="#pricing" class="card-link">Start Module →</a>
+      </article>
+
+      <article class="module-card">
+        <div class="module-tag">Module 6</div>
+        <h3>Mock Technical Interviews</h3>
+        <p>Timed simulations of the questions senior AI PM interviews actually ask, with model answers and scoring rubrics.</p>
+        <ul class="lesson-list">
+          <li><span class="dot"></span> "Design a RAG system for support tickets" <em>Mock, 20 min</em></li>
+          <li><span class="dot"></span> "How would you evaluate this chatbot?" <em>Mock, 15 min</em></li>
+          <li><span class="dot"></span> "Our RAGAS scores look great but users are unhappy — why?" <em>Mock, 15 min</em></li>
+        </ul>
+        <a href="#interviews" class="card-link">See Sample Interview →</a>
+      </article>
+    </div>
+  </section>
+
+  <section id="interviews" class="section container alt">
+    <h2 class="section-title">Mock Interview Practice</h2>
+    <p class="section-subtitle">Realistic, scenario-based technical interviews — timed, scored, and reviewed.</p>
+    <div class="interview-card">
+      <div class="interview-question">
+        <span class="badge">Sample Question</span>
+        <h3>"Our RAG chatbot's RAGAS faithfulness score is 0.92, but support tickets say it's making things up. Walk me through how you'd investigate."</h3>
+      </div>
+      <div class="interview-meta">
+        <span>⏱ 15 min mock interview</span>
+        <span>📋 Scored on 4 criteria</span>
+        <span>🎯 Model answer included</span>
+      </div>
+      <a href="#pricing" class="btn btn-primary">Try a Mock Interview</a>
+    </div>
+  </section>
+
+  <section id="pricing" class="section container">
+    <h2 class="section-title">Pricing</h2>
+    <p class="section-subtitle">Start free. Upgrade when you're ready for full mock interviews and certification.</p>
+    <div class="pricing-grid">
+      <article class="price-card">
+        <h3>Free</h3>
+        <p class="price">$0</p>
+        <ul>
+          <li>Module 1: LLM Foundations</li>
+          <li>1 sample test</li>
+          <li>1 sample mock interview</li>
+        </ul>
+        <a href="#" class="btn btn-secondary">Get Started</a>
+      </article>
+      <article class="price-card featured">
+        <div class="price-badge">Most Popular</div>
+        <h3>Full Access</h3>
+        <p class="price">$49<span>/month</span></p>
+        <ul>
+          <li>All 6 modules, updated regularly</li>
+          <li>Every module test</li>
+          <li>Unlimited mock interviews</li>
+          <li>Completion certificate</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Start Learning</a>
+      </article>
+      <article class="price-card">
+        <h3>Team</h3>
+        <p class="price">Custom</p>
+        <ul>
+          <li>Everything in Full Access</li>
+          <li>Team progress dashboard</li>
+          <li>Custom interview question sets</li>
+        </ul>
+        <a href="#" class="btn btn-secondary">Contact Us</a>
+      </article>
+    </div>
+  </section>
+
+  <section id="faq" class="section container">
+    <h2 class="section-title">FAQ</h2>
+    <div class="faq-list">
+      <details>
+        <summary>Do I need a coding background?</summary>
+        <p>No. Lessons are built for product managers — concepts are explained through architecture, trade-offs, and decisions, not code.</p>
+      </details>
+      <details>
+        <summary>How long is each lesson?</summary>
+        <p>4–8 minutes. Every lesson is scoped to one clear idea so you can watch it between meetings.</p>
+      </details>
+      <details>
+        <summary>What's actually tested?</summary>
+        <p>Scenario-based questions and mock interviews that check whether you can apply a concept under realistic conditions — not multiple-choice trivia.</p>
+      </details>
+      <details>
+        <summary>Is this updated as the field changes?</summary>
+        <p>Yes. RAG, evals, and RAGAS practices evolve quickly, and modules are revised as best practices shift.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>&copy; <span id="year"></span> PM Technicals. Built for senior AI product managers.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
