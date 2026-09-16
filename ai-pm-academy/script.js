@@ -98,6 +98,7 @@ MODULES.forEach((mod) => {
 });
 
 const modal = document.getElementById("lessonModal");
+const modalBox = document.getElementById("modalBox");
 const modalVideo = document.getElementById("modalVideo");
 const modalModule = document.getElementById("modalModule");
 const modalTitle = document.getElementById("lessonModalTitle");
@@ -107,9 +108,12 @@ const modalWatched = document.getElementById("modalWatched");
 const modalPrev = document.getElementById("modalPrev");
 const modalNext = document.getElementById("modalNext");
 const modalClose = document.getElementById("modalClose");
+const modalSize = document.getElementById("modalSize");
+const modalFullscreen = document.getElementById("modalFullscreen");
 const playBtn = document.getElementById("playBtn");
 const modalCaptions = document.getElementById("modalCaptions");
 const noAudioWarning = document.getElementById("noAudioWarning");
+const voiceSelect = document.getElementById("voiceSelect");
 
 const speechSupported = "speechSynthesis" in window;
 if (!speechSupported) noAudioWarning.hidden = false;
@@ -117,6 +121,58 @@ if (!speechSupported) noAudioWarning.hidden = false;
 let currentIndex = 0;
 let currentUtterance = null;
 let narrationWords = [];
+let selectedVoiceURI = null;
+
+const SIZES = ["", "size-large", "size-xl"];
+let sizeIndex = 0;
+
+modalSize.addEventListener("click", () => {
+  modalBox.classList.remove(...SIZES.filter(Boolean));
+  sizeIndex = (sizeIndex + 1) % SIZES.length;
+  if (SIZES[sizeIndex]) modalBox.classList.add(SIZES[sizeIndex]);
+});
+
+modalFullscreen.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (modalBox.requestFullscreen) {
+    modalBox.requestFullscreen();
+  }
+});
+
+document.addEventListener("fullscreenchange", () => {
+  modalBox.classList.toggle("fullscreen-active", document.fullscreenElement === modalBox);
+});
+
+function populateVoices() {
+  if (!speechSupported) return;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+
+  const rank = (v) =>
+    /natural|neural|enhanced|premium|online/i.test(v.name) ? 0 : v.lang.startsWith("en") ? 1 : 2;
+  const sorted = [...voices].sort((a, b) => rank(a) - rank(b));
+
+  voiceSelect.innerHTML = "";
+  sorted.forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v.voiceURI;
+    opt.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(opt);
+  });
+
+  if (!selectedVoiceURI) selectedVoiceURI = sorted[0].voiceURI;
+  voiceSelect.value = selectedVoiceURI;
+}
+
+voiceSelect.addEventListener("change", () => {
+  selectedVoiceURI = voiceSelect.value;
+});
+
+if (speechSupported) {
+  populateVoices();
+  window.speechSynthesis.onvoiceschanged = populateVoices;
+}
 
 function stopNarration() {
   if (speechSupported) window.speechSynthesis.cancel();
@@ -127,7 +183,12 @@ function stopNarration() {
 
 function pickVoice() {
   const voices = window.speechSynthesis.getVoices();
-  return voices.find((v) => v.lang && v.lang.startsWith("en")) || voices[0] || null;
+  if (!voices.length) return null;
+  return (
+    voices.find((v) => v.voiceURI === selectedVoiceURI) ||
+    voices.find((v) => v.lang && v.lang.startsWith("en")) ||
+    voices[0]
+  );
 }
 
 function playNarration(lesson) {
@@ -186,6 +247,7 @@ function openLesson(index) {
 
 function closeLesson() {
   stopNarration();
+  if (document.fullscreenElement === modalBox) document.exitFullscreen();
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
@@ -216,7 +278,3 @@ playBtn.addEventListener("click", () => {
     playNarration(allLessons[currentIndex]);
   }
 });
-
-if (speechSupported && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
-  window.speechSynthesis.onvoiceschanged = () => {};
-}

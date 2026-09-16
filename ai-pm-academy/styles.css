@@ -462,22 +462,49 @@ ul {
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  transition: max-width 0.25s ease;
 }
 
-.modal-close {
+.modal.size-large {
+  max-width: 860px;
+}
+
+.modal.size-xl {
+  max-width: 1200px;
+}
+
+.modal.fullscreen-active {
+  max-width: 100%;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+.modal-toolbar {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.08);
   border: none;
   color: var(--color-text);
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  z-index: 2;
+  transition: background 0.15s;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .modal-video {
@@ -489,6 +516,22 @@ ul {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.modal.fullscreen-active .modal-video {
+  aspect-ratio: auto;
+  flex: 1;
+  border-radius: 0;
+}
+
+.modal.fullscreen-active {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal.fullscreen-active .modal-body,
+.modal.fullscreen-active .modal-footer {
+  flex-shrink: 0;
 }
 
 .play-btn {
@@ -588,6 +631,14 @@ ul {
   padding: 28px 28px 8px;
 }
 
+.modal-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 .modal-module {
   display: inline-block;
   color: var(--color-accent);
@@ -595,7 +646,24 @@ ul {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  margin-bottom: 10px;
+}
+
+.voice-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.voice-picker select {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  max-width: 160px;
 }
 
 .modal-body h3 {
