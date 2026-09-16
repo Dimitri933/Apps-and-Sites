@@ -121,7 +121,6 @@ if (!speechSupported) noAudioWarning.hidden = false;
 
 let currentIndex = 0;
 let currentUtterance = null;
-let narrationWords = [];
 let selectedVoiceURI = null;
 
 const SIZES = ["", "size-large", "size-xl"];
@@ -195,6 +194,7 @@ if (speechSupported) {
 
 function stopNarration() {
   clearTimeout(startTimer);
+  clearInterval(watchdogInterval);
   if (speechSupported) window.speechSynthesis.cancel();
   modalVideo.classList.remove("playing");
   playBtn.textContent = "▶";
@@ -214,17 +214,51 @@ function candidateVoices() {
 }
 
 let startTimer = null;
+let watchdogInterval = null;
+let sentenceQueue = [];
+let sentenceIndex = 0;
 
-function speakAttempt(text, voiceQueue, queueIndex) {
+function splitSentences(text) {
+  return (text.match(/[^.!?]+[.!?]*/g) || [text]).map((s) => s.trim()).filter(Boolean);
+}
+
+// Many speech engines (notably Chrome) silently stop mid-narration on long
+// utterances. Nudging pause/resume periodically, plus speaking one sentence
+// at a time, keeps the engine's internal queue from stalling.
+function startWatchdog() {
+  clearInterval(watchdogInterval);
+  watchdogInterval = setInterval(() => {
+    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    }
+  }, 10000);
+}
+
+function stopWatchdog() {
+  clearInterval(watchdogInterval);
+  watchdogInterval = null;
+}
+
+function finishNarration() {
+  clearTimeout(startTimer);
+  stopWatchdog();
+  modalVideo.classList.remove("playing");
+  playBtn.textContent = "▶";
+  modalCaptions.textContent = "";
+}
+
+function speakAttempt(voiceQueue, queueIndex) {
+  const sentence = sentenceQueue[sentenceIndex];
+
   if (queueIndex >= voiceQueue.length) {
-    modalCaptions.textContent = "Audio isn't available on this device/browser — try Text Only below.";
-    modalVideo.classList.remove("playing");
-    playBtn.textContent = "▶";
+    modalCaptions.textContent = "Audio isn't available on this device/browser — try Text Only above.";
+    finishNarration();
     return;
   }
 
   const voice = voiceQueue[queueIndex];
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(sentence);
   utterance.rate = 0.98;
   utterance.pitch = 1;
   if (voice) {
@@ -239,27 +273,23 @@ function speakAttempt(text, voiceQueue, queueIndex) {
     clearTimeout(startTimer);
     modalVideo.classList.add("playing");
     playBtn.textContent = "⏸";
-  };
-
-  utterance.onboundary = (event) => {
-    if (event.name !== "word" && event.charIndex === undefined) return;
-    const spokenSoFar = text.slice(0, event.charIndex);
-    const wordIndex = spokenSoFar.split(/\s+/).length - 1;
-    const start = Math.max(0, wordIndex - 4);
-    modalCaptions.textContent = narrationWords.slice(start, wordIndex + 3).join(" ");
+    modalCaptions.textContent = sentence;
   };
 
   utterance.onend = () => {
     clearTimeout(startTimer);
-    modalVideo.classList.remove("playing");
-    playBtn.textContent = "▶";
-    modalCaptions.textContent = "";
+    sentenceIndex += 1;
+    if (sentenceIndex >= sentenceQueue.length) {
+      finishNarration();
+    } else {
+      speakAttempt(voiceQueue, 0);
+    }
   };
 
   utterance.onerror = () => {
     clearTimeout(startTimer);
     if (voice) brokenVoiceURIs.add(voice.voiceURI);
-    speakAttempt(text, voiceQueue, queueIndex + 1);
+    speakAttempt(voiceQueue, queueIndex + 1);
   };
 
   currentUtterance = utterance;
@@ -270,7 +300,7 @@ function speakAttempt(text, voiceQueue, queueIndex) {
     if (!started) {
       window.speechSynthesis.cancel();
       if (voice) brokenVoiceURIs.add(voice.voiceURI);
-      speakAttempt(text, voiceQueue, queueIndex + 1);
+      speakAttempt(voiceQueue, queueIndex + 1);
     }
   }, 1500);
 }
@@ -280,8 +310,10 @@ function playNarration(lesson) {
   window.speechSynthesis.cancel();
 
   const text = `${lesson.title}. ${lesson.desc}`;
-  narrationWords = text.split(/\s+/);
-  speakAttempt(text, candidateVoices(), 0);
+  sentenceQueue = splitSentences(text);
+  sentenceIndex = 0;
+  startWatchdog();
+  speakAttempt(candidateVoices(), 0);
 }
 
 function openLesson(index) {
