@@ -98,6 +98,7 @@ MODULES.forEach((mod) => {
 });
 
 const modal = document.getElementById("lessonModal");
+const modalVideo = document.getElementById("modalVideo");
 const modalModule = document.getElementById("modalModule");
 const modalTitle = document.getElementById("lessonModalTitle");
 const modalDesc = document.getElementById("modalDesc");
@@ -107,10 +108,70 @@ const modalPrev = document.getElementById("modalPrev");
 const modalNext = document.getElementById("modalNext");
 const modalClose = document.getElementById("modalClose");
 const playBtn = document.getElementById("playBtn");
+const modalCaptions = document.getElementById("modalCaptions");
+const noAudioWarning = document.getElementById("noAudioWarning");
+
+const speechSupported = "speechSynthesis" in window;
+if (!speechSupported) noAudioWarning.hidden = false;
 
 let currentIndex = 0;
+let currentUtterance = null;
+let narrationWords = [];
+
+function stopNarration() {
+  if (speechSupported) window.speechSynthesis.cancel();
+  modalVideo.classList.remove("playing");
+  playBtn.textContent = "▶";
+  modalCaptions.textContent = "";
+}
+
+function pickVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find((v) => v.lang && v.lang.startsWith("en")) || voices[0] || null;
+}
+
+function playNarration(lesson) {
+  if (!speechSupported) return;
+  window.speechSynthesis.cancel();
+
+  const text = `${lesson.title}. ${lesson.desc}`;
+  narrationWords = text.split(/\s+/);
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.98;
+  utterance.pitch = 1;
+  const voice = pickVoice();
+  if (voice) utterance.voice = voice;
+
+  utterance.onstart = () => {
+    modalVideo.classList.add("playing");
+    playBtn.textContent = "⏸";
+  };
+
+  utterance.onboundary = (event) => {
+    if (event.name !== "word" && event.charIndex === undefined) return;
+    const spokenSoFar = text.slice(0, event.charIndex);
+    const wordIndex = spokenSoFar.split(/\s+/).length - 1;
+    const start = Math.max(0, wordIndex - 4);
+    modalCaptions.textContent = narrationWords.slice(start, wordIndex + 3).join(" ");
+  };
+
+  utterance.onend = () => {
+    modalVideo.classList.remove("playing");
+    playBtn.textContent = "▶";
+    modalCaptions.textContent = "";
+  };
+
+  utterance.onerror = () => {
+    modalVideo.classList.remove("playing");
+    playBtn.textContent = "▶";
+  };
+
+  currentUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
 
 function openLesson(index) {
+  stopNarration();
   currentIndex = (index + allLessons.length) % allLessons.length;
   const lesson = allLessons[currentIndex];
   modalModule.textContent = `${lesson.moduleName} · Lesson ${lesson.index + 1}`;
@@ -118,13 +179,13 @@ function openLesson(index) {
   modalDesc.textContent = lesson.desc;
   modalDuration.textContent = lesson.duration;
   modalWatched.checked = false;
-  playBtn.textContent = "▶";
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 }
 
 function closeLesson() {
+  stopNarration();
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
@@ -142,5 +203,20 @@ modalPrev.addEventListener("click", () => openLesson(currentIndex - 1));
 modalNext.addEventListener("click", () => openLesson(currentIndex + 1));
 
 playBtn.addEventListener("click", () => {
-  playBtn.textContent = "⏸";
+  if (!speechSupported) return;
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    modalVideo.classList.remove("playing");
+    playBtn.textContent = "▶";
+  } else if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    modalVideo.classList.add("playing");
+    playBtn.textContent = "⏸";
+  } else {
+    playNarration(allLessons[currentIndex]);
+  }
 });
+
+if (speechSupported && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
+  window.speechSynthesis.onvoiceschanged = () => {};
+}

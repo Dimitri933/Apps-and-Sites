@@ -171,9 +171,14 @@
 <div class="modal-overlay" id="lessonModal" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lessonModalTitle">
     <button class="modal-close" id="modalClose" aria-label="Close lesson">&times;</button>
-    <div class="modal-video">
+    <div class="modal-video" id="modalVideo">
+      <div class="bars" id="bars">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <button class="play-btn" id="playBtn" aria-label="Play lesson">▶</button>
+      <p class="modal-captions" id="modalCaptions"></p>
       <span class="modal-duration" id="modalDuration"></span>
+      <span class="no-audio-warning" id="noAudioWarning" hidden>Your browser doesn't support spoken audio — captions only.</span>
     </div>
     <div class="modal-body">
       <span class="modal-module" id="modalModule"></span>
