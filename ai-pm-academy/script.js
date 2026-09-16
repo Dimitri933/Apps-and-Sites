@@ -386,6 +386,12 @@ const playBtn = document.getElementById("playBtn");
 const modalCaptions = document.getElementById("modalCaptions");
 const noAudioWarning = document.getElementById("noAudioWarning");
 const voiceSelect = document.getElementById("voiceSelect");
+const mockPanel = document.getElementById("mockPanel");
+const mockTimeDisplay = document.getElementById("mockTimeDisplay");
+const mockStart = document.getElementById("mockStart");
+const mockReset = document.getElementById("mockReset");
+const mockAnswer = document.getElementById("mockAnswer");
+const mockReveal = document.getElementById("mockReveal");
 
 const speechSupported = "speechSynthesis" in window;
 if (!speechSupported) noAudioWarning.hidden = false;
@@ -607,34 +613,73 @@ function playNarration(lesson) {
   playGeneration += 1;
   window.speechSynthesis.cancel();
 
-  const text = `${lesson.title}. ${lesson.script.join(" ")}`;
+  // Mock interview lessons: don't narrate the rubric/model answer before
+  // the candidate has attempted it and clicked Reveal.
+  const isMock = lesson.moduleId === 6;
+  const scriptToSpeak = isMock && !mockRevealed ? lesson.script.slice(0, 1) : lesson.script;
+  const text = `${lesson.title}. ${scriptToSpeak.join(" ")}`;
   sentenceQueue = splitSentences(text);
   sentenceIndex = 0;
   startWatchdog();
   speakAttempt(candidateVoices(), 0, playGeneration);
 }
 
-function resumeNarration() {
-  if (!speechSupported) return;
-  playGeneration += 1;
-  window.speechSynthesis.cancel();
-  startWatchdog();
-  speakAttempt(candidateVoices(), 0, playGeneration);
+let mockIntervalId = null;
+let mockSecondsRemaining = 0;
+let mockRevealed = false;
+
+function parseMinutes(duration) {
+  const match = duration.match(/(\d+)\s*min/);
+  return match ? parseInt(match[1], 10) : 15;
 }
 
-function openLesson(index) {
-  stopNarration();
-  currentIndex = (index + allLessons.length) % allLessons.length;
-  const lesson = allLessons[currentIndex];
-  modalModule.textContent = `${lesson.moduleName} · Lesson ${lesson.index + 1}`;
-  modalTitle.textContent = lesson.title;
+function formatTime(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function stopMockTimer() {
+  clearInterval(mockIntervalId);
+  mockIntervalId = null;
+}
+
+function resetMockTimer(lesson) {
+  stopMockTimer();
+  mockSecondsRemaining = parseMinutes(lesson.duration) * 60;
+  mockTimeDisplay.textContent = formatTime(mockSecondsRemaining);
+  mockTimeDisplay.classList.remove("time-up");
+  mockStart.disabled = false;
+  mockStart.textContent = "Start Timer";
+}
+
+function startMockTimer() {
+  if (mockIntervalId) return;
+  mockStart.disabled = true;
+  mockStart.textContent = "Running…";
+  mockIntervalId = setInterval(() => {
+    mockSecondsRemaining -= 1;
+    if (mockSecondsRemaining <= 0) {
+      stopMockTimer();
+      mockSecondsRemaining = 0;
+      mockTimeDisplay.textContent = "Time's up!";
+      mockTimeDisplay.classList.add("time-up");
+      mockStart.disabled = true;
+      return;
+    }
+    mockTimeDisplay.textContent = formatTime(mockSecondsRemaining);
+  }, 1000);
+}
+
+function renderLessonBody(lesson, revealAll) {
   modalDesc.innerHTML = "";
-  lesson.script.forEach((paragraph) => {
+  const paragraphs = revealAll ? lesson.script : lesson.script.slice(0, 1);
+  paragraphs.forEach((paragraph) => {
     const p = document.createElement("p");
     p.textContent = paragraph;
     modalDesc.appendChild(p);
   });
-  if (lesson.takeaways && lesson.takeaways.length) {
+  if (revealAll && lesson.takeaways && lesson.takeaways.length) {
     const heading = document.createElement("h4");
     heading.className = "takeaways-heading";
     heading.textContent = "Key takeaways";
@@ -648,8 +693,51 @@ function openLesson(index) {
     });
     modalDesc.appendChild(list);
   }
+}
+
+mockStart.addEventListener("click", startMockTimer);
+mockReset.addEventListener("click", () => resetMockTimer(allLessons[currentIndex]));
+mockReveal.addEventListener("click", () => {
+  mockRevealed = true;
+  renderLessonBody(allLessons[currentIndex], true);
+  mockAnswer.disabled = true;
+  mockReveal.disabled = true;
+  mockReveal.textContent = "Revealed ✓";
+  stopMockTimer();
+});
+
+function resumeNarration() {
+  if (!speechSupported) return;
+  playGeneration += 1;
+  window.speechSynthesis.cancel();
+  startWatchdog();
+  speakAttempt(candidateVoices(), 0, playGeneration);
+}
+
+function openLesson(index) {
+  stopNarration();
+  currentIndex = (index + allLessons.length) % allLessons.length;
+  const lesson = allLessons[currentIndex];
+  const isMock = lesson.moduleId === 6;
+  mockRevealed = false;
+
+  modalModule.textContent = `${lesson.moduleName} · Lesson ${lesson.index + 1}`;
+  modalTitle.textContent = lesson.title;
+  renderLessonBody(lesson, !isMock);
   modalDuration.textContent = lesson.duration;
   modalWatched.checked = false;
+
+  mockPanel.hidden = !isMock;
+  if (isMock) {
+    mockAnswer.value = "";
+    mockAnswer.disabled = false;
+    mockReveal.disabled = false;
+    mockReveal.textContent = "Reveal Model Answer & Rubric";
+    resetMockTimer(lesson);
+  } else {
+    stopMockTimer();
+  }
+
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -657,6 +745,7 @@ function openLesson(index) {
 
 function closeLesson() {
   stopNarration();
+  stopMockTimer();
   if (document.fullscreenElement === modalBox) document.exitFullscreen();
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
@@ -673,6 +762,14 @@ document.addEventListener("keydown", (e) => {
 
 modalPrev.addEventListener("click", () => openLesson(currentIndex - 1));
 modalNext.addEventListener("click", () => openLesson(currentIndex + 1));
+
+const tryMockInterview = document.getElementById("tryMockInterview");
+if (tryMockInterview) {
+  tryMockInterview.addEventListener("click", () => {
+    const firstMockIndex = allLessons.findIndex((l) => l.moduleId === 6);
+    if (firstMockIndex !== -1) openLesson(firstMockIndex);
+  });
+}
 
 playBtn.addEventListener("click", () => {
   if (!speechSupported) return;

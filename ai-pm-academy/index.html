@@ -133,7 +133,7 @@
         <span>📋 Scored on 4 criteria</span>
         <span>🎯 Model answer included</span>
       </div>
-      <a href="#curriculum" class="btn btn-primary">Try a Mock Interview</a>
+      <button type="button" class="btn btn-primary" id="tryMockInterview">Try a Mock Interview</button>
     </div>
   </section>
 
@@ -195,6 +195,17 @@
       </div>
       <h3 id="lessonModalTitle"></h3>
       <div id="modalDesc" class="modal-desc"></div>
+
+      <div class="mock-panel" id="mockPanel" hidden>
+        <div class="mock-timer-row">
+          <span class="mock-timer" id="mockTimeDisplay">20:00</span>
+          <button class="btn btn-secondary" id="mockStart">Start Timer</button>
+          <button class="btn btn-secondary" id="mockReset">Reset</button>
+        </div>
+        <textarea id="mockAnswer" class="mock-answer" placeholder="Draft your answer here — the timer keeps going even if you switch tabs, so just write as if this were the real interview."></textarea>
+        <button class="btn btn-primary" id="mockReveal">Reveal Model Answer &amp; Rubric</button>
+      </div>
+
       <label class="modal-check">
         <input type="checkbox" id="modalWatched"> Mark as watched
       </label>
