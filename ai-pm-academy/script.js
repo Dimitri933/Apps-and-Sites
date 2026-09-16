@@ -463,13 +463,33 @@ if (speechSupported) {
   window.speechSynthesis.onvoiceschanged = populateVoices;
 }
 
+// speechSynthesis.pause()/resume()/.paused are unreliable across browsers
+// (pause can silently no-op, or a later resume can fire on its own, even
+// after the user stopped it). Instead we always fully stop with cancel(),
+// which is reliable, and use a generation counter so a cancelled
+// utterance's late onend/onerror callbacks can never restart playback —
+// only callbacks from the current, still-current attempt are honored.
+let playGeneration = 0;
+
 function stopNarration() {
+  playGeneration += 1;
+  clearTimeout(startTimer);
+  clearInterval(watchdogInterval);
+  if (speechSupported) window.speechSynthesis.cancel();
+  sentenceQueue = [];
+  sentenceIndex = 0;
+  modalVideo.classList.remove("playing");
+  playBtn.textContent = "▶";
+  modalCaptions.textContent = "";
+}
+
+function pauseNarration() {
+  playGeneration += 1;
   clearTimeout(startTimer);
   clearInterval(watchdogInterval);
   if (speechSupported) window.speechSynthesis.cancel();
   modalVideo.classList.remove("playing");
   playBtn.textContent = "▶";
-  modalCaptions.textContent = "";
 }
 
 function candidateVoices() {
@@ -514,12 +534,14 @@ function stopWatchdog() {
 function finishNarration() {
   clearTimeout(startTimer);
   stopWatchdog();
+  sentenceIndex = 0;
   modalVideo.classList.remove("playing");
   playBtn.textContent = "▶";
   modalCaptions.textContent = "";
 }
 
-function speakAttempt(voiceQueue, queueIndex) {
+function speakAttempt(voiceQueue, queueIndex, generation) {
+  if (generation !== playGeneration) return; // superseded by a stop/pause/new play
   const sentence = sentenceQueue[sentenceIndex];
 
   if (queueIndex >= voiceQueue.length) {
@@ -540,6 +562,7 @@ function speakAttempt(voiceQueue, queueIndex) {
   let started = false;
 
   utterance.onstart = () => {
+    if (generation !== playGeneration) return;
     started = true;
     clearTimeout(startTimer);
     modalVideo.classList.add("playing");
@@ -549,18 +572,20 @@ function speakAttempt(voiceQueue, queueIndex) {
 
   utterance.onend = () => {
     clearTimeout(startTimer);
+    if (generation !== playGeneration) return; // cancelled by pause/stop — don't advance or continue
     sentenceIndex += 1;
     if (sentenceIndex >= sentenceQueue.length) {
       finishNarration();
     } else {
-      speakAttempt(voiceQueue, 0);
+      speakAttempt(voiceQueue, 0, generation);
     }
   };
 
   utterance.onerror = () => {
     clearTimeout(startTimer);
+    if (generation !== playGeneration) return; // cancelled by pause/stop, not a real playback error
     if (voice) brokenVoiceURIs.add(voice.voiceURI);
-    speakAttempt(voiceQueue, queueIndex + 1);
+    speakAttempt(voiceQueue, queueIndex + 1, generation);
   };
 
   currentUtterance = utterance;
@@ -568,23 +593,33 @@ function speakAttempt(voiceQueue, queueIndex) {
 
   clearTimeout(startTimer);
   startTimer = setTimeout(() => {
+    if (generation !== playGeneration) return;
     if (!started) {
       window.speechSynthesis.cancel();
       if (voice) brokenVoiceURIs.add(voice.voiceURI);
-      speakAttempt(voiceQueue, queueIndex + 1);
+      speakAttempt(voiceQueue, queueIndex + 1, generation);
     }
   }, 1500);
 }
 
 function playNarration(lesson) {
   if (!speechSupported) return;
+  playGeneration += 1;
   window.speechSynthesis.cancel();
 
   const text = `${lesson.title}. ${lesson.script.join(" ")}`;
   sentenceQueue = splitSentences(text);
   sentenceIndex = 0;
   startWatchdog();
-  speakAttempt(candidateVoices(), 0);
+  speakAttempt(candidateVoices(), 0, playGeneration);
+}
+
+function resumeNarration() {
+  if (!speechSupported) return;
+  playGeneration += 1;
+  window.speechSynthesis.cancel();
+  startWatchdog();
+  speakAttempt(candidateVoices(), 0, playGeneration);
 }
 
 function openLesson(index) {
@@ -641,14 +676,11 @@ modalNext.addEventListener("click", () => openLesson(currentIndex + 1));
 
 playBtn.addEventListener("click", () => {
   if (!speechSupported) return;
-  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-    window.speechSynthesis.pause();
-    modalVideo.classList.remove("playing");
-    playBtn.textContent = "▶";
-  } else if (window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
-    modalVideo.classList.add("playing");
-    playBtn.textContent = "⏸";
+  const isPlaying = modalVideo.classList.contains("playing");
+  if (isPlaying) {
+    pauseNarration();
+  } else if (sentenceQueue.length && sentenceIndex < sentenceQueue.length) {
+    resumeNarration();
   } else {
     playNarration(allLessons[currentIndex]);
   }
